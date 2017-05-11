@@ -1,6 +1,7 @@
 package org.jclass.jdbc;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -43,11 +44,13 @@ public class DatabaseHelper {
 	}
 	
 	public static void closeConnect(Connection conn){
-		try {
-			conn.close();
-		} catch (SQLException e) {
-			System.out.println("can not close the connection");
-			throw new RuntimeException(e);
+		if (null != conn){
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				System.out.println("can not close the connection");
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	
@@ -76,19 +79,51 @@ public class DatabaseHelper {
 	
 	public static <T> T queryEntity(Class<T> clazz, String sql, Object... params){
 		T entity = null;
-		Field[] fields = clazz.getDeclaredFields();
+		String columnName;
+		Method m;
+		Connection conn = getConnect();
 		try {
-			for (int i=0; i<fields.length; i++){
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int count = rsmd.getColumnCount();
+			while (rs.next()){
 				entity = clazz.newInstance();
-				Method[] ms = clazz.getMethods();
-				
-				System.out.println(fields[i].getName());
+				for (int i=1; i<=count; i++){
+					columnName = rsmd.getColumnName(i);
+
+					m = clazz.getDeclaredMethod(toJavaSetMethodName(columnName),int.class);
+
+					m.invoke(entity,rs.getInt(columnName));
+				}
+
 			}
+
 		} catch (InstantiationException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
+		} catch (SQLException e){
+			e.printStackTrace();
+		} catch (NoSuchMethodException e){
+			e.printStackTrace();
+		} catch (InvocationTargetException e){
+			e.printStackTrace();
+		} finally {
+			closeConnect(conn);
 		}
 		return entity;
+	}
+
+	public static String toJavaSetMethodName(String columnName){
+		char[] chars = columnName.toCharArray();
+		chars[0] = Character.toUpperCase(chars[0]);
+		return "set" + new String(chars);
+	}
+
+	public static String toJavaGetMethodName(String columnName){
+		char[] chars = columnName.toCharArray();
+		chars[0] = Character.toUpperCase(chars[0]);
+		return "get" + new String(chars);
 	}
 }
