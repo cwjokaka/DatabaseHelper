@@ -8,12 +8,11 @@ import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jclass.jdbc.DatabaseHelper;
+import org.jclass.jdbc.LsAnnotation;
+import org.jclass.jdbc.LsBaseJDBC;
 import org.jclass.model.Customer;
 
 public class ClassLoaderTest {
@@ -28,13 +27,28 @@ public class ClassLoaderTest {
 //		int count = DatabaseHelper.update("insert into customer (name,contact,phone,email,remark) values(?,?,?,?,?)",
 //				"王尼玛","本人","13702532706", "funny135@126com", "getout");
 //		System.out.println(count);
-		Customer customer = DatabaseHelper.queryEntityById(1, Customer.class);
+		Ls ls = new Ls();
+//		Map<String, Object> customer = ls.queryMapById(1);
+//		Map<String, Object> params = new HashMap<>();
+//		params.put("name", "陈胜");
+//		params.put("contact", "啦啦");
+//		params.put("phone", "18520277367");
+//		params.put("email", "18520277367@qq.com");
+//		params.put("remark", "npnpnp");
+//		int count = ls.insertEntity(params);
+		int cpunt = ls.deleteEntityById(4);
 	}
 
 }
+
 
 class Db extends DatabaseHelper{
 	public static <T> T queryEntityById(Object id, Class<T> clazz){
 		return null;
 	}
+}
+
+@LsAnnotation(tableName = "customer")
+class Ls extends LsBaseJDBC<Customer>{
+
 }
