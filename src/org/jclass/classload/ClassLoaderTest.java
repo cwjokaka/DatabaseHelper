@@ -28,7 +28,7 @@ public class ClassLoaderTest {
 //		int count = DatabaseHelper.update("insert into customer (name,contact,phone,email,remark) values(?,?,?,?,?)",
 //				"王尼玛","本人","13702532706", "funny135@126com", "getout");
 //		System.out.println(count);
-		Customer customer = Db.queryEntityById(1, Customer.class);
+		Customer customer = DatabaseHelper.queryEntityById(1, Customer.class);
 	}
 
 }

@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DatabaseHelper {
+public class DatabaseHelper{
 
     private final static String DRIVER;
     private final static String URL;
     private final static String USERNAME;
     private final static String PASSWORD;
+
+    private final static ThreadLocal<Connection> CONNECTION_POOL = new ThreadLocal<>();
 
     static {
         DRIVER = "com.mysql.jdbc.Driver";
@@ -44,7 +46,7 @@ public class DatabaseHelper {
             e.printStackTrace();
             throw new RuntimeException(e);
         } finally {
-            closeConnect(conn);
+            closeConnect();
         }
         return entity;
     }
@@ -63,7 +65,7 @@ public class DatabaseHelper {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			closeConnect(conn);
+			closeConnect();
 		}
 		return list;
 	}
@@ -81,7 +83,7 @@ public class DatabaseHelper {
 			System.out.println("can not query for map");
 			throw new RuntimeException(e);
 		} finally {
-			closeConnect(conn);
+			closeConnect();
 		}
 		return map;
 	}
@@ -99,7 +101,7 @@ public class DatabaseHelper {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			closeConnect(conn);
+			closeConnect();
 		}
 
 		return list;
@@ -133,7 +135,7 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-			closeConnect(conn);
+			closeConnect();
 		}
         return resultMap;
     }
@@ -285,23 +287,31 @@ public class DatabaseHelper {
 
 
 	private static Connection getConnect(){
-		Connection conn = null;
-		try {
-			conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-		} catch (SQLException e) {
-			System.out.println("can not get sql connection!");
-			throw new RuntimeException(e);
+		Connection conn = CONNECTION_POOL.get();
+		if (null == conn){
+			try {
+				conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+			} catch (SQLException e) {
+				System.out.println("can not get sql connection!");
+				throw new RuntimeException(e);
+			} finally {
+				CONNECTION_POOL.set(conn);
+			}
 		}
+
 		return conn;
 	}
 
-	private static void closeConnect(Connection conn){
+	private static void closeConnect(){
+		Connection conn = CONNECTION_POOL.get();
 		if (null != conn){
 			try {
 				conn.close();
 			} catch (SQLException e) {
 				System.out.println("can not close the connection");
 				throw new RuntimeException(e);
+			} finally {
+				CONNECTION_POOL.remove();
 			}
 		}
 	}
