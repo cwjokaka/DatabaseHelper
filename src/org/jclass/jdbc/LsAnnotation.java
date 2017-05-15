@@ -9,4 +9,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface LsAnnotation {
     String tableName() default "";
+    
+    String id() default "id";
 }

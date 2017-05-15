@@ -21,7 +21,10 @@ public class LsBaseJDBC<T> {
     private final static ThreadLocal<Connection> CONNECTION_POOL = new ThreadLocal<>();
 
     private Class<T> clazz;
-
+    
+    private String tableName;
+    private String id;
+    
     public LsBaseJDBC(){
         //得到带泛型的父类org.jclass.jdbc.LsBaseJDBC<org.jclass.model.Customer>
         Type superclass = this.getClass().getGenericSuperclass();
@@ -35,6 +38,8 @@ public class LsBaseJDBC<T> {
                 clazz=(Class)typeArray[0];
             }
         }
+        //初始化配置
+        init();
     }
 
     static {
@@ -74,7 +79,7 @@ public class LsBaseJDBC<T> {
     public T queryEntityById(Object id){
         Connection conn = getConnect();
         T entity = null;
-        String sql = "SELECT * FROM " + getTableName(this.getClass()) + " WHERE id="+id;
+        String sql = "SELECT * FROM " + this.tableName + " WHERE " + this.id + "="+id;
 
         try {
             Statement s = conn.createStatement();
@@ -129,7 +134,7 @@ public class LsBaseJDBC<T> {
     public Map<String, Object> queryMapById(Object id){
         Connection conn = getConnect();
         Map<String, Object> map = null;
-        String sql = "SELECT * FROM " + getTableName(this.getClass()) + " WHERE id="+id;
+        String sql = "SELECT * FROM " + this.tableName + " WHERE "+this.id+"="+id;
         try {
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery(sql);
@@ -234,7 +239,7 @@ public class LsBaseJDBC<T> {
     }
 
     public int deleteEntityById(Object id){
-        String sql = "DELETE FROM " + getTableName(this.getClass()) + " WHERE ID=?";
+        String sql = "DELETE FROM " + this.tableName + " WHERE " + this.id + "=?";
         return update(sql,id);
     }
 
@@ -330,9 +335,14 @@ public class LsBaseJDBC<T> {
         chars[0] = Character.toUpperCase(chars[0]);
         return "get" + new String(chars);
     }
+    
+    private void init(){
+    	this.id = getId(this.clazz);
+    	this.tableName = getTableName(this.clazz);
+    }
 
     private static String getTableName(Class clazz){
-        String tableName = null;
+        String tableName = clazz.getSimpleName();
         Annotation anno = clazz.getAnnotation(LsAnnotation.class);
         if (null != anno){
             try {
@@ -345,10 +355,26 @@ public class LsBaseJDBC<T> {
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
-        } else {
-            tableName = clazz.getSimpleName();
-        }
+        } 
         return tableName;
+    }
+    
+    private static String getId(Class clazz){
+    	String id = "id";
+    	Annotation anno = clazz.getAnnotation(LsAnnotation.class);
+        if (null != anno){
+            try {
+                Method method = anno.annotationType().getDeclaredMethod("id");
+                id = (String) method.invoke(anno);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        } 
+        return id;
     }
 
     private static Connection getConnect(){
