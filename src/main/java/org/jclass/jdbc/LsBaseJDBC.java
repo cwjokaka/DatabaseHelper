@@ -1,5 +1,7 @@
 package org.jclass.jdbc;
 
+import org.jclass.util.PropsUtil;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,10 +45,11 @@ public class LsBaseJDBC<T> {
     }
 
     static {
-        DRIVER = "com.mysql.jdbc.Driver";
-        URL = "jdbc:mysql://127.0.0.1:3306/demo";
-        USERNAME = "root";
-        PASSWORD = "root";
+        Properties props = PropsUtil.loadProps("jdbc.properties");
+        DRIVER = props.getProperty("jdbc.driver");
+        URL = props.getProperty("jdbc.url");
+        USERNAME = props.getProperty("jdbc.username");
+        PASSWORD = props.getProperty("jdbc.password");
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
