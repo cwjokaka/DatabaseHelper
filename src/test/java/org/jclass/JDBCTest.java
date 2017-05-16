@@ -16,11 +16,12 @@ public class JDBCTest {
     @Before
     public void init(){
         customerDao = new CustomerDao();
+        customerDao.excuteSqlFile("sql/init.sql");
     }
 
     @Test
     public void queryEntityTest(){
-        Customer customer = customerDao.queryEntity("SELECT * FROM customer");
+        Customer customer = customerDao.queryEntity("SELECT * FROM customer WHERE id=?",1);
 
     }
 }

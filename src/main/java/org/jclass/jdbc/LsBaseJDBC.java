@@ -2,6 +2,10 @@ package org.jclass.jdbc;
 
 import org.jclass.util.PropsUtil;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -244,6 +248,22 @@ public class LsBaseJDBC<T> {
     public int deleteEntityById(Object id){
         String sql = "DELETE FROM " + this.tableName + " WHERE " + this.id + "=?";
         return update(sql,id);
+    }
+
+    public int excuteSqlFile(String filePath){
+        int rows = 0;
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader br = new BufferedReader(isr);
+        String lineContent = null;
+        try {
+            while ((lineContent = br.readLine()) != null) {
+                rows += update(lineContent);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rows;
     }
 
     private static Map<String, Object> rsToMap(ResultSet rs){
