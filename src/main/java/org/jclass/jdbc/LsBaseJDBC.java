@@ -216,6 +216,8 @@ public class LsBaseJDBC<T> {
             rows = ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeConnect();
         }
         return rows;
     }
@@ -249,12 +251,26 @@ public class LsBaseJDBC<T> {
         return update(sql,id);
     }
 
+    public int updateEntity(Object id, Map<String, Object> fieldMap){
+        StringBuilder sql = new StringBuilder("UPDATE ");
+        sql.append(this.tableName);
+        sql.append(" SET ");
+        Set<String> columns = fieldMap.keySet();
+        for (String columnName : columns){
+            sql.append(columnName).append("=");
+            sql.append("?,");
+        }
+        sql.replace(sql.lastIndexOf(","),sql.length(),"");
+        sql.append(" WHERE ").append(this.id).append("=").append(id);
+        return update(sql.toString(),fieldMap.values().toArray());
+    }
+
     public static int excuteSqlFile(String filePath){
         int rows = 0;
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(isr);
-        String lineContent = null;
+        String lineContent;
         try {
             while ((lineContent = br.readLine()) != null) {
                 rows += update(lineContent);
