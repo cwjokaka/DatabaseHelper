@@ -64,13 +64,8 @@ public class LsBaseJDBC<T> {
 
     public T queryEntity(String sql, Object... params){
         T entity = null;
-        Connection conn = getConnect();
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            for (int i=0; i<params.length; i++){
-                ps.setObject(i+1, params[i]);
-            }
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = query(sql, params);
             while (rs.next()){
                 entity = rsToEntity(rs, this.clazz);
             }
@@ -84,18 +79,17 @@ public class LsBaseJDBC<T> {
     }
 
     public T queryEntityById(Object id){
-        Connection conn = getConnect();
         T entity = null;
         String sql = "SELECT * FROM " + this.tableName + " WHERE " + this.id + "="+id;
-
         try {
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery(sql);
+            ResultSet rs = query(sql);
             while (rs.next()){
                 entity = rsToEntity(rs, this.clazz);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeConnect();
         }
 
         return entity;
@@ -104,10 +98,8 @@ public class LsBaseJDBC<T> {
     public List<T> queryEntityList(String sql, Object... params){
         List<T> list = new ArrayList<>();
         T entity;
-        Connection conn = getConnect();
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = query(sql,params);
             while (rs.next()){
                 entity = rsToEntity(rs, this.clazz);
                 list.add(entity);
@@ -120,18 +112,16 @@ public class LsBaseJDBC<T> {
         return list;
     }
 
-    public static Map<String, Object> queryMap(String sql){
-        Connection conn = getConnect();
+    public static Map<String, Object> queryMap(String sql, Object... params){
         Map<String, Object> map = null;
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = query(sql, params);
             if (rs.next()) {
                 map = rsToMap(rs);
             }
         } catch (SQLException e) {
-            System.out.println("can not query for map");
-            throw new RuntimeException(e);
+                System.out.println("can not query for map");
+                throw new RuntimeException(e);
         } finally {
             closeConnect();
         }
@@ -208,8 +198,11 @@ public class LsBaseJDBC<T> {
 
     public static ResultSet query(String sql, Object... params) throws SQLException{
         Connection conn = getConnect();
-        conn.prepareStatement(sql);
-        return null;
+        PreparedStatement ps = conn.prepareStatement(sql);
+        for (int i=0; i<params.length; i++){
+            ps.setObject(i+1, params[i]);
+        }
+        return ps.executeQuery();
     }
 
     public static int update(String sql, Object... params){
@@ -223,8 +216,6 @@ public class LsBaseJDBC<T> {
             rows = ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            closeConnect();
         }
         return rows;
     }
@@ -270,6 +261,8 @@ public class LsBaseJDBC<T> {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            closeConnect();
         }
         return rows;
     }
@@ -399,12 +392,15 @@ public class LsBaseJDBC<T> {
         if (null == conn){
             try {
                 conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                System.out.println("打开连接:"+conn);
             } catch (SQLException e) {
                 System.out.println("can not get sql connection!");
                 throw new RuntimeException(e);
             } finally {
                 CONNECTION_POOL.set(conn);
             }
+        } else {
+            System.out.println("得到连接:"+conn);
         }
 
         return conn;
@@ -419,8 +415,16 @@ public class LsBaseJDBC<T> {
                 System.out.println("can not close the connection");
                 throw new RuntimeException(e);
             } finally {
+                System.out.println("关闭连接:"+conn);
                 CONNECTION_POOL.remove();
             }
         }
+    }
+
+    private static int getResultSetRows(ResultSet rs) throws SQLException{
+        rs.last();
+        int rowCount = rs.getRow();
+        rs.beforeFirst();
+        return rowCount;
     }
 }

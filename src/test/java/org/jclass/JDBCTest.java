@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -23,7 +24,7 @@ public class JDBCTest {
 
     @Test
     public void queryEntityTest(){
-        Customer customer = customerDao.queryEntity("SELECT name FROM customer WHERE id=?",1);
+        Customer customer = customerDao.queryEntity("SELECT * FROM customer WHERE id=?",1);
         System.out.println(customer);
     }
 
@@ -37,5 +38,11 @@ public class JDBCTest {
     public void queryEntityListTest(){
         List<Customer> customerList = customerDao.queryEntityList("SELECT * FROM customer");
         System.out.println(customerList);
+    }
+
+    @Test
+    public void queryMapTest(){
+        Map<String, Object> customer = customerDao.queryMap("SELECT * FROM customer");
+        System.out.println(customer);
     }
 }
