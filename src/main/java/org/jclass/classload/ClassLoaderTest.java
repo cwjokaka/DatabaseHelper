@@ -1,11 +1,12 @@
 package org.jclass.classload;
 
-import java.util.Map;
-
 import org.jclass.jdbc.DatabaseHelper;
 import org.jclass.jdbc.LsAnnotation;
 import org.jclass.jdbc.LsBaseJDBC;
 import org.jclass.model.Customer;
+
+import java.util.Map;
+
 
 public class ClassLoaderTest {
 
@@ -29,7 +30,7 @@ class Db extends DatabaseHelper{
 	}
 }
 
-class Ls extends LsBaseJDBC<Customer>{
+class Ls extends LsBaseJDBC<Customer> {
 	
 }
 

@@ -206,6 +206,12 @@ public class LsBaseJDBC<T> {
         return resultMap;
     }
 
+    public static ResultSet query(String sql, Object... params) throws SQLException{
+        Connection conn = getConnect();
+        conn.prepareStatement(sql);
+        return null;
+    }
+
     public static int update(String sql, Object... params){
         int rows = 0;
         Connection conn = getConnect();
@@ -217,6 +223,8 @@ public class LsBaseJDBC<T> {
             rows = ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeConnect();
         }
         return rows;
     }
@@ -250,7 +258,7 @@ public class LsBaseJDBC<T> {
         return update(sql,id);
     }
 
-    public int excuteSqlFile(String filePath){
+    public static int excuteSqlFile(String filePath){
         int rows = 0;
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
         InputStreamReader isr = new InputStreamReader(is);
@@ -266,40 +274,26 @@ public class LsBaseJDBC<T> {
         return rows;
     }
 
-    private static Map<String, Object> rsToMap(ResultSet rs){
+    private static Map<String, Object> rsToMap(ResultSet rs) throws SQLException{
         Map<String, Object> map = new HashMap<>();
-        try {
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int count = rsmd.getColumnCount();
-            for (int i=1; i<=count; i++){
-                String key = rsmd.getColumnName(i);
-                map.put(key, rs.getObject(key));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int count = rsmd.getColumnCount();
+        for (int i=1; i<=count; i++){
+            String key = rsmd.getColumnName(i);
+            map.put(key, rs.getObject(key));
         }
         return map;
     }
 
-    private static List<Map<String, Object>> rsToMapList(ResultSet rs){
-
+    private static List<Map<String, Object>> rsToMapList(ResultSet rs) throws SQLException{
         if (null != rs){
+            Map<String, Object> map;
             List<Map<String, Object>> list = new ArrayList<>();
-            try {
-                while (rs.next()){
-                    Map<String, Object> map = new HashMap<>();
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    int count = rsmd.getColumnCount();
-                    for (int i=1; i<=count; i++){
-                        String key = rsmd.getColumnName(i);
-                        map.put(key, rs.getObject(key));
-                    }
-                    list.add(map);
-                }
-                return list;
-            } catch (SQLException e) {
-                e.printStackTrace();
+            while (rs.next()){
+                map = rsToMap(rs);
+                list.add(map);
             }
+            return list;
         }
         return null;
     }
