@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
@@ -299,6 +296,7 @@ public class LsBaseJDBC<T> {
             ResultSetMetaData rsmd = rs.getMetaData();
             int count = rsmd.getColumnCount();
             entity = clazz.newInstance();
+
             for (int i=1; i<=count; i++){
                 columnName = rsmd.getColumnName(i);
                 String javaFieldName = toJavaFieldName(columnName);
@@ -312,9 +310,9 @@ public class LsBaseJDBC<T> {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+
         } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -336,6 +334,12 @@ public class LsBaseJDBC<T> {
 
     private static String toJavaSetMethodName(String columnName){
         char[] chars = toJavaFieldName(columnName).toCharArray();
+        chars[0] = Character.toUpperCase(chars[0]);
+        return "set" + new String(chars);
+    }
+
+    private static String fieldToSetMethodName(String field){
+        char[] chars = field.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return "set" + new String(chars);
     }
