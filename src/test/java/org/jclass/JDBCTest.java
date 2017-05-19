@@ -5,6 +5,7 @@ import org.jclass.model.Customer;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,5 +45,13 @@ public class JDBCTest {
     public void queryMapTest(){
         Map<String, Object> customer = customerDao.queryMap("SELECT * FROM customer");
         System.out.println(customer);
+    }
+
+    @Test
+    public void updateEntityTest(){
+        Map<String, Object> fieldMap = new HashMap<>();
+        fieldMap.put("name", "coko");
+        fieldMap.put("remark", "nonono");
+        customerDao.updateEntity(1, fieldMap);
     }
 }
