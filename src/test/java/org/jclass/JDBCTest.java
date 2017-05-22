@@ -43,15 +43,17 @@ public class JDBCTest {
 
     @Test
     public void queryMapTest(){
-        Map<String, Object> customer = customerDao.queryMap("SELECT * FROM customer");
+        Map<String, Object> customer = customerDao.queryMap("SELECT * FROM customer WHERE id > 1");
         System.out.println(customer);
+
     }
 
     @Test
     public void updateEntityTest(){
         Map<String, Object> fieldMap = new HashMap<>();
         fieldMap.put("name", "coko");
-        fieldMap.put("remark", "nonono");
+        fieldMap.put("remark", "nonono1");
         customerDao.updateEntity(1, fieldMap);
+
     }
 }

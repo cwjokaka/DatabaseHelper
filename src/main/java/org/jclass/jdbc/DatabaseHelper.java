@@ -1,5 +1,10 @@
 package org.jclass.jdbc;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
@@ -191,48 +196,52 @@ public class DatabaseHelper{
 
 
 
-	private static Map<String, Object> rsToMap(ResultSet rs){
-		Map<String, Object> map = new HashMap<>();
+	public static int excuteSqlFile(String filePath){
+		int rows = 0;
+		InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader br = new BufferedReader(isr);
+		String lineContent;
 		try {
-			ResultSetMetaData rsmd = rs.getMetaData();
-			int count = rsmd.getColumnCount();
-			for (int i=1; i<=count; i++){
-                String key = rsmd.getColumnName(i);
-                map.put(key, rs.getObject(key));
-            }
-		} catch (SQLException e) {
+			while ((lineContent = br.readLine()) != null) {
+				rows += update(lineContent);
+			}
+		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			closeConnect();
+		}
+		return rows;
+	}
+
+	private static Map<String, Object> rsToMap(ResultSet rs) throws SQLException{
+		Map<String, Object> map = new HashMap<>();
+		ResultSetMetaData rsmd = rs.getMetaData();
+		int count = rsmd.getColumnCount();
+		for (int i=1; i<=count; i++){
+			String key = rsmd.getColumnName(i);
+			map.put(key, rs.getObject(key));
 		}
 		return map;
 	}
 
-    private static List<Map<String, Object>> rsToMapList(ResultSet rs){
+	private static List<Map<String, Object>> rsToMapList(ResultSet rs) throws SQLException{
+		if (null != rs){
+			Map<String, Object> map;
+			List<Map<String, Object>> list = new ArrayList<>();
+			while (rs.next()){
+				map = rsToMap(rs);
+				list.add(map);
+			}
+			return list;
+		}
+		return null;
+	}
 
-        if (null != rs){
-            List<Map<String, Object>> list = new ArrayList<>();
-            try {
-                while (rs.next()){
-                    Map<String, Object> map = new HashMap<>();
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    int count = rsmd.getColumnCount();
-                    for (int i=1; i<=count; i++){
-                        String key = rsmd.getColumnName(i);
-                        map.put(key, rs.getObject(key));
-                    }
-                    list.add(map);
-                }
-                return list;
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    private static <T> T rsToEntity(ResultSet rs, Class<T> clazz){
-    	T entity = null;
-    	String columnName;
-    	Method curMethod;
+	private static <T> T rsToEntity(ResultSet rs, Class<T> clazz){
+		T entity = null;
+		String columnName;
+		Method curMethod;
 		try {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int count = rsmd.getColumnCount();
@@ -278,11 +287,13 @@ public class DatabaseHelper{
 		return "set" + new String(chars);
 	}
 
-	private static String toJavaGetMethodName(String columnName){
-		char[] chars = toJavaFieldName(columnName).toCharArray();
-		chars[0] = Character.toUpperCase(chars[0]);
-		return "get" + new String(chars);
+	private static int getResultSetRows(ResultSet rs) throws SQLException{
+		rs.last();
+		int rowCount = rs.getRow();
+		rs.beforeFirst();
+		return rowCount;
 	}
+
 
 
 

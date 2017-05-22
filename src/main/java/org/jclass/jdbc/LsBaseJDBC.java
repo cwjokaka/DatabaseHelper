@@ -66,7 +66,10 @@ public class LsBaseJDBC<T> {
         T entity = null;
         try {
             ResultSet rs = query(sql, params);
-            while (rs.next()){
+            if (getResultSetRows(rs) > 1){
+                throw new RuntimeException("");
+            }
+            if (rs.next()){
                 entity = rsToEntity(rs, this.clazz);
             }
         } catch (SQLException e){
@@ -116,12 +119,15 @@ public class LsBaseJDBC<T> {
         Map<String, Object> map = null;
         try {
             ResultSet rs = query(sql, params);
+            if (getResultSetRows(rs) > 1){
+                throw new RuntimeException("the result is not only one");
+            }
             if (rs.next()) {
                 map = rsToMap(rs);
             }
         } catch (SQLException e) {
-                System.out.println("can not query for map");
-                throw new RuntimeException(e);
+            System.out.println("can not query for map");
+            throw new RuntimeException(e);
         } finally {
             closeConnect();
         }
@@ -135,7 +141,10 @@ public class LsBaseJDBC<T> {
         try {
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery(sql);
-            while (rs.next()){
+            if (getResultSetRows(rs) > 1){
+
+            }
+            if (rs.next()){
                 map = rsToMap(rs);
             }
         } catch (SQLException e) {
@@ -265,6 +274,14 @@ public class LsBaseJDBC<T> {
         return update(sql.toString(),fieldMap.values().toArray());
     }
 
+    private void init(){
+        this.id = getId(this.clazz);
+        this.tableName = getTableName(this.clazz);
+    }
+
+
+
+
     public static int excuteSqlFile(String filePath){
         int rows = 0;
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
@@ -361,11 +378,6 @@ public class LsBaseJDBC<T> {
         chars[0] = Character.toUpperCase(chars[0]);
         return "get" + new String(chars);
     }
-    
-    private void init(){
-    	this.id = getId(this.clazz);
-    	this.tableName = getTableName(this.clazz);
-    }
 
     private static String getTableName(Class clazz){
         String tableName = clazz.getSimpleName();
@@ -403,6 +415,16 @@ public class LsBaseJDBC<T> {
         return id;
     }
 
+    private static int getResultSetRows(ResultSet rs) throws SQLException{
+        rs.last();
+        int rowCount = rs.getRow();
+        rs.beforeFirst();
+        return rowCount;
+    }
+
+
+
+
     private static Connection getConnect(){
         Connection conn = CONNECTION_POOL.get();
         if (null == conn){
@@ -437,10 +459,7 @@ public class LsBaseJDBC<T> {
         }
     }
 
-    private static int getResultSetRows(ResultSet rs) throws SQLException{
-        rs.last();
-        int rowCount = rs.getRow();
-        rs.beforeFirst();
-        return rowCount;
-    }
+
+
+
 }
