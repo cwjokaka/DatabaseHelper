@@ -1,5 +1,7 @@
 package org.jclass.jdbc;
 
+import org.jclass.util.PropsUtil;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,10 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DatabaseHelper{
 
@@ -23,10 +22,12 @@ public class DatabaseHelper{
     private final static ThreadLocal<Connection> CONNECTION_POOL = new ThreadLocal<>();
 
     static {
-        DRIVER = "com.mysql.jdbc.Driver";
-        URL = "jdbc:mysql://127.0.0.1:3306/demo";
-        USERNAME = "root";
-        PASSWORD = "root";
+    	Properties props = PropsUtil.loadProps("jdbc.properties");
+        DRIVER = PropsUtil.getPropString(props, "jdbc.driver", "com.mysql.jdbc.Driver");
+        URL = PropsUtil.getPropString(props, "jdbc.url", "jdbc:mysql://127.0.0.1:3306/demo");
+        USERNAME = PropsUtil.getPropString(props, "jdbc.username", "root");
+        PASSWORD = PropsUtil.getPropString(props, "jdbc.password", "root");
+
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {

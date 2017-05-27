@@ -28,9 +28,17 @@ public final class PropsUtil {
                 e.printStackTrace();
             }
         }
-
-
         return props;
+    }
 
+    public final static String getPropString(Properties props, String key){
+        return getPropString(props, key, "");
+    }
+
+    public final static String getPropString(Properties props, String key, String defaultValue){
+        if (props.containsKey(key)){
+            return props.getProperty(key);
+        }
+        return defaultValue;
     }
 }
